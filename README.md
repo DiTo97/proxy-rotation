@@ -12,7 +12,7 @@ The proxy rotator API includes convenience features such as:
 
 ## installation
 
-To install the `proxyrotation` package, you should use `pip`:
+To install `proxyrotation` in stable release, you should use `pip`:
 
 ```bash
 pip install proxyrotation
