@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "proxyrotation"
-version = "0.1.0"
+version = "0.2.0"
 description = "automatic free proxy rotation"
 authors = ["Federico Minutoli <fede97.minutoli@gmail.com>"]
 license = "MIT"
