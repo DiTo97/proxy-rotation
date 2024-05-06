@@ -18,7 +18,7 @@ class Anonymity(str, enum.Enum):
             return Anonymity.unknown
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class Proxy:
     """proxy address object
 
@@ -27,7 +27,7 @@ class Proxy:
         port: The proxy port number
         countrycode: The proxy ISO 3166-1 alpha-2 country code
         anonymity: The proxy anonymity level
-        secure: If supports HTTPS or not
+        secure: If HTTPS protocol is supported or not
     """
 
     host: str = field(hash=True)
