@@ -1,6 +1,7 @@
 import pathlib
 import pickle
 import random
+import typing
 from datetime import datetime
 
 from proxyrotation.common import has_async
@@ -17,30 +18,59 @@ class ProxyRotator:
     allows specifying various filters, such as anonymity level, connection security,
     ISO 3166-1 alpha-2 country code, and downloading from free public sources,
     while ensuring the sanity of any proxy address retrieved.
+
+    Attributes:
+        _anonymity: The desired anonymity level. none disables filtering
+        _blockedset: stale, exhausted or non-working proxy addresses
+        _cachedir: The path to the cache dir. none disables caching
+        _countrycodeset: desired alpha-2 country codes. none disables filtering
+        _crawledset: available proxy addresses
+        _downloaded: The last datetime sources were fetched
+        _livecheck: whether non-working proxy addresses should be live checked while fetching
+        _maxshape: The max number of available proxy addresses to keep. 0 means unbounded
+        _repository: The repository to fetch free proxy address sources from
+        _schedule: The automatic refresh interval (seconds). 0.0 disables auto-refresh
+        _secure: whether secure connections (HTTPS) should be enforced
+        _selected: active proxy address. none means no proxy address satisfying criteria is available
+
+    Args:
+        anonymity: The desired anonymity level. none disables filtering
+        cachedir: The path to the cache dir. none disables caching
+        countrycodeset: desired alpha-2 country codes. none disables filtering
+        livecheck: whether non-working proxy addresses should be live checked while fetching
+        maxshape: The max number of available proxy addresses to keep. 0 means unbounded
+        repository: The repository to fetch free proxy address sources from; could be "async" or "sequential"
+        schedule: The automatic refresh interval (seconds). 0.0 disables auto-refresh
+        secure: whether secure connections (HTTPS) should be enforced
+
+    Raises:
+        If cache dir is provided, but cache is invalid for criteria
     """
 
-    _anonymity: Anonymity | None
+    _anonymity: typing.Optional[Anonymity]
     _blockedset: set[Proxy]
-    _cachedir: pathlib.Path | None
-    _countrycodeset: set[str] | None
+    _cachedir: typing.Optional[pathlib.Path]
+    _countrycodeset: typing.Optional[set[str]]
     _crawledset: set[Proxy]
-    _downloaded: datetime | None
+    _downloaded: typing.Optional[datetime]
     _livecheck: bool
     _maxshape: int
     _repository: abc_Repository
     _schedule: float
     _secure: bool
-    _selected: Proxy | None
+    _selected: typing.Optional[Proxy]
 
     def __init__(
         self,
         *,
-        anonymity: Anonymity | None = None,
-        cachedir: str | None = None,
-        countrycodeset: set[str] | None = None,
+        anonymity: typing.Optional[Anonymity] = None,
+        cachedir: typing.Optional[str] = None,
+        countrycodeset: typing.Optional[set[str]] = None,
         livecheck: bool = True,
         maxshape: int = 0,
-        repository: str | abc_Repository = ("async" if has_async else "sequential"),
+        repository: typing.Union[str, abc_Repository] = (
+            "async" if has_async else "sequential"
+        ),
         schedule: float = 0.0,
         secure: bool = True,
     ):
@@ -74,7 +104,7 @@ class ProxyRotator:
         return self._crawledset
 
     @property
-    def selected(self) -> Proxy | None:
+    def selected(self) -> typing.Optional[Proxy]:
         """The selected proxy address"""
         return self._selected
 
