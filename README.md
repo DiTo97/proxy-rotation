@@ -1,6 +1,6 @@
 # proxy-rotation
 
-[![testing status](https://github.com/DiTo97/saferequests/actions/workflows/testing.yaml/badge.svg?branch=contrib&event=pull_request)](https://github.com/DiTo97/saferequests/actions/workflows/testing.yaml)
+[![testing status](https://github.com/DiTo97/proxy-rotation/actions/workflows/testing.yaml/badge.svg?branch=contrib&event=pull_request)](https://github.com/DiTo97/proxy-rotation/actions/workflows/testing.yaml)
 
 automatic free proxy rotation for web scraping with caching and filtering.
 
