@@ -1,4 +1,5 @@
 import ipaddress
+import typing
 
 from bs4 import BeautifulSoup as BS
 
@@ -14,7 +15,7 @@ except ImportError:
     has_async = False
 
 
-def is_ipv4_address(address: str | Proxy) -> bool:
+def is_ipv4_address(address: typing.Union[str, Proxy]) -> bool:
     """If a proxy address conforms to a IPv4 address"""
     if isinstance(address, Proxy):
         address = address.host

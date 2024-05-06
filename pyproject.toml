@@ -12,7 +12,7 @@ readme = "README.md"
 keywords = ["proxy-rotation", "web-scraping", "anonymity"]
 
 [tool.poetry.dependencies]
-python = "~3.10"
+python = "~3.9"
 aiohttp = { version = "~3.9", optional = true }
 aiostream = { version = "~0.5", optional = true }
 beautifulsoup4 = "~4.12"
@@ -45,11 +45,11 @@ exclude = """
 )/
 """
 line-length = 88
-target-version = ["py310"]
+target-version = ["py39"]
 
 [tool.isort]
 include_trailing_comma = true
 lines_after_imports = 2
 multi_line_output = 3
 profile = "black"
-py_version = 310
+py_version = 39
