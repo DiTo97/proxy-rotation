@@ -2,12 +2,12 @@
 
 [![testing status](https://github.com/DiTo97/proxy-rotation/actions/workflows/testing.yaml/badge.svg?branch=contrib&event=pull_request)](https://github.com/DiTo97/proxy-rotation/actions/workflows/testing.yaml)
 
-automatic free proxy rotation for web scraping with caching and filtering.
+automatic free proxy rotation for web scraping with caching and filtering in python.
 
 The proxy rotator API includes convenience features such as:
 - specifying various filtering options, such as anonymity level, security, and alpha-2 country code;
-- downloading proxy addresses from major free public sources;
-- managing the state of positive and negative proxy addresses across runs using caching;
+- downloading proxy addresses from free public sources;
+- managing the state of positive and negative proxy addresses over time using caching;
 - automatically rotating proxy addresses when stale or exhausted.
 
 ## installation
