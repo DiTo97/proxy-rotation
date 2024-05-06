@@ -1,0 +1,62 @@
+name: testing
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: python setup
+        id: python-setup
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: caching poetry
+        id: caching-poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: poetry-${{ runner.os }}-${{ steps.python-setup.outputs.python-version }}
+
+      - uses: snok/install-poetry@v1
+        if: steps.caching-poetry.outputs.cache-hit != 'true'
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: caching dependencies
+        id: caching-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.python-setup.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: dependencies
+        if: steps.caching-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: package
+        run: poetry install --no-interaction
+
+      - name: testing with coverage
+        run: poetry run pytest --cov=proxy-rotation --cov-report=xml tests/
+
+      - name: min coverage satisfaction - 0.50
+        run: |
+          coverage=$(grep -oPm1 'line-rate="\K[^"]+' ./coverage.xml | awk '{printf "%.4f\n", $1}')
+
+          if [ $(bc <<< "$coverage < 0.50") -eq 1 ]
+          then
+              echo "coverage is below 0.50 ($coverage)"
+              exit 1
+          fi
