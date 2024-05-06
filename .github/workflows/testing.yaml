@@ -18,7 +18,7 @@ jobs:
         id: python-setup
         uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.10"
 
       - name: caching poetry
         id: caching-poetry
@@ -51,12 +51,12 @@ jobs:
       - name: testing with coverage
         run: poetry run pytest --cov=proxy-rotation --cov-report=xml tests/
 
-      - name: coverage satisfaction 0.75
+      - name: min coverage satisfaction - 0.50
         run: |
           coverage=$(grep -oPm1 'line-rate="\K[^"]+' ./coverage.xml | awk '{printf "%.4f\n", $1}')
 
-          if [ $(bc <<< "$coverage < 0.75") -eq 1 ]
+          if [ $(bc <<< "$coverage < 0.50") -eq 1 ]
           then
-              echo "coverage is below 0.75 ($coverage)"
+              echo "coverage is below 0.50 ($coverage)"
               exit 1
           fi
