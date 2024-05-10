@@ -5,9 +5,9 @@ from functools import reduce
 import aiohttp
 import aiostream
 
-from proxyrotation.common import batch_response_parsing
-from proxyrotation.modelling import Proxy
-from proxyrotation.repository import URL_freesources, URL_sanity, abc_Repository
+from ..common import batch_response_parsing
+from ..modelling import Proxy
+from ..repository import URL_freesources, URL_sanity, abc_Repository
 
 
 # https://github.com/MagicStack/uvloop/issues/14
@@ -16,29 +16,36 @@ if platform.system().lower() != "windows":
 
     #
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+else:
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 async def _batch_download(session: aiohttp.ClientSession, endpoint: str) -> set[Proxy]:
     """downloads batch of proxy addresses from a free public source"""
-    async with session.get(endpoint) as response:
-        if response.status != 200:
-            return set()
+    try:
+        async with session.get(endpoint) as response:
+            if response.status != 200:
+                return set()
 
-        response = await response.text()
+            response = await response.text()
+    except asyncio.TimeoutError:
+        return set()
 
     available = batch_response_parsing(response)
 
     return available
 
 
-async def _is_proxy_working(session: aiohttp.ClientSession, proxy: Proxy) -> bool:
+async def _is_proxy_working(
+    session: aiohttp.ClientSession, proxy: Proxy, timeout: float = 5.0
+) -> bool:
     """If proxy address is reachable and working"""
     try:
         async with session.get(
             URL_sanity.format(scheme=proxy.scheme),
             proxy=f"http://{proxy.peername}",
             allow_redirects=False,
-            timeout=1.0,
+            timeout=timeout,
         ) as response:
             peername = response.connection.transport.get_extra_info("peername")
 
@@ -62,7 +69,9 @@ class Repository(abc_Repository):
         return asyncio.run(self._reachability(available))
 
     async def _batch_download(self) -> set[Proxy]:
-        timeout = aiohttp.ClientTimeout(sock_connect=5.0, sock_read=5.0)
+        timeout = aiohttp.ClientTimeout(
+            sock_connect=self._timeout, sock_read=self._timeout
+        )
 
         async with aiohttp.ClientSession(timeout=timeout) as session:
             available = await asyncio.gather(
@@ -75,7 +84,9 @@ class Repository(abc_Repository):
     async def _reachability(
         self, available: set[Proxy]
     ) -> tuple[set[Proxy], set[Proxy]]:
-        timeout = aiohttp.ClientTimeout(sock_connect=5.0, sock_read=5.0)
+        timeout = aiohttp.ClientTimeout(
+            sock_connect=self._timeout, sock_read=self._timeout
+        )
 
         positive = set()
         negative = set()
@@ -90,7 +101,10 @@ class Repository(abc_Repository):
             async with iterator.stream() as chunkset:
                 async for batchset in chunkset:
                     response = await asyncio.gather(
-                        *[_is_proxy_working(session, proxy) for proxy in batchset]
+                        *[
+                            _is_proxy_working(session, proxy, self._timeout)
+                            for proxy in batchset
+                        ]
                     )
 
                     for x in zip(response, batchset):
