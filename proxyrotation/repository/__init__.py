@@ -2,7 +2,7 @@ import importlib
 from abc import ABC, abstractmethod
 from typing import Any
 
-from proxyrotation.modelling import Proxy
+from ..modelling import Proxy
 
 
 URL_freesources = [
@@ -17,9 +17,11 @@ URL_sanity = "{scheme}://www.google.com"
 
 class abc_Repository(ABC):
     _batchsize: int
+    _timeout: float
 
-    def __init__(self, batchsize: int = 10) -> None:
+    def __init__(self, batchsize: int = 10, timeout: float = 5.0) -> None:
         self._batchsize = batchsize
+        self._timeout = timeout
 
     @abstractmethod
     def batch_download(self) -> set[Proxy]:

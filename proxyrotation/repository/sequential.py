@@ -1,34 +1,37 @@
-from functools import reduce
+from functools import partial, reduce
 
 import requests
 from more_itertools import chunked
 
-from proxyrotation.common import batch_response_parsing
-from proxyrotation.modelling import Proxy
-from proxyrotation.repository import URL_freesources, URL_sanity, abc_Repository
+from ..common import batch_response_parsing
+from ..modelling import Proxy
+from ..repository import URL_freesources, URL_sanity, abc_Repository
 
 
-def _batch_download(endpoint: str) -> set[Proxy]:
+def _batch_download(endpoint: str, timeout: float = 5.0) -> set[Proxy]:
     """downloads batch of proxy addresses from a free public source"""
-    with requests.get(endpoint, timeout=(5.0, 5.0)) as response:
-        if response.status_code != 200:
-            return set()
+    try:
+        with requests.get(endpoint, timeout=(timeout, timeout)) as response:
+            if response.status_code != 200:
+                return set()
 
-        response = response.text
+            response = response.text
+    except requests.exceptions.ReadTimeout:
+        return set()
 
     available = batch_response_parsing(response)
 
     return available
 
 
-def _is_proxy_working(proxy: Proxy) -> bool:
+def _is_proxy_working(proxy: Proxy, timeout: float = 5.0) -> bool:
     """If proxy address is reachable and working"""
     try:
         with requests.get(
             URL_sanity.format(scheme=proxy.scheme),
             proxies={"http": proxy.peername, "https": proxy.peername},
             allow_redirects=False,
-            timeout=1.0,
+            timeout=timeout,
             stream=True,
         ) as response:
             socket = response.raw.connection.sock
@@ -55,7 +58,9 @@ class Repository(abc_Repository):
         return self._reachability(available)
 
     def _batch_download(self) -> set[Proxy]:
-        available = map(_batch_download, URL_freesources)
+        f = partial(_batch_download, timeout=self._timeout)
+
+        available = map(f, URL_freesources)
         available = reduce(lambda x, y: x | y, available)
 
         return available
@@ -67,8 +72,10 @@ class Repository(abc_Repository):
         batchsize = self._batchsize if self._batchsize > 0 else len(available)
         batchsize = min(batchsize, len(available))
 
+        f = partial(_is_proxy_working, timeout=self._timeout)
+
         for batchset in chunked(available, batchsize):
-            response = map(_is_proxy_working, batchset)
+            response = map(f, batchset)
 
             for x in zip(response, batchset):
                 positive.add(x[1]) if x[0] else negative.add(x[1])
