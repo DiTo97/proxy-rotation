@@ -3,7 +3,7 @@ import typing
 
 from bs4 import BeautifulSoup as BS
 
-from proxyrotation.modelling import Anonymity, Proxy
+from .modelling import Anonymity, Proxy
 
 
 try:

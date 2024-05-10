@@ -3,10 +3,11 @@ import pickle
 import random
 import typing
 from datetime import datetime
+from typing import Any
 
-from proxyrotation.common import has_async
-from proxyrotation.modelling import Anonymity, Proxy
-from proxyrotation.repository import abc_Repository, from_name
+from .common import has_async
+from .modelling import Anonymity, Proxy
+from .repository import abc_Repository, from_name
 
 
 _cachefile = "proxyrotation.pickle"
@@ -42,6 +43,7 @@ class ProxyRotator:
         repository: The repository to fetch free proxy address sources from; could be "async" or "sequential"
         schedule: The automatic refresh interval (seconds). 0.0 disables auto-refresh
         secure: whether secure connections (HTTPS) should be enforced
+        kwargs: The repository additional kwargs
 
     Raises:
         If cache dir is provided, but cache is invalid for criteria
@@ -68,11 +70,12 @@ class ProxyRotator:
         countrycodeset: typing.Optional[set[str]] = None,
         livecheck: bool = True,
         maxshape: int = 0,
-        repository: typing.Union[str, abc_Repository] = (
-            "async" if has_async else "sequential"
-        ),
+        repository: typing.Union[
+            typing.Literal["async", "sequential"], abc_Repository
+        ] = ("async" if has_async else "sequential"),
         schedule: float = 0.0,
         secure: bool = True,
+        **kwargs: Any,
     ):
         self._anonymity = anonymity
         self._blockedset = set()
@@ -83,7 +86,9 @@ class ProxyRotator:
         self._maxshape = maxshape
         self._crawledset = set()
         self._repository = (
-            from_name(repository) if isinstance(repository, str) else repository
+            from_name(repository, **kwargs)
+            if isinstance(repository, str)
+            else repository
         )
         self._schedule = schedule
         self._secure = secure
